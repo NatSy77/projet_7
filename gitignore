@@ -1,0 +1,21 @@
+# Ignorer l'environnement virtuel
+env/
+
+# Ignorer les fichiers de cache Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorer les fichiers de logs et autres artefacts
+*.log
+
+# Ignorer les données sensibles
+*.env
+
+# Ignorer les fichiers générés par Jupyter
+.notebooks_checkpoints/
+.ipynb_checkpoints/
+
+# Ignorer les dépendances installées
+app/requirements.txt__pycache__/
+__pycache__/
