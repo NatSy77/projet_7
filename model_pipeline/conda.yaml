@@ -7,7 +7,6 @@ dependencies:
   - mlflow==2.20.0
   - cffi==1.17.1
   - cloudpickle==3.1.1
-  - cupy-cuda12x==12.2.0
   - dask==2024.10.0
   - defusedxml==0.7.1
   - graphviz==0.20.3
