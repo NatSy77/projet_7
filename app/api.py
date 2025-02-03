@@ -1,15 +1,16 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import Dict, Union  # Import de Union pour Python < 3.10
 import pandas as pd
 import joblib
-from app.models import model_loader  # Importer la classe ModelLoader
+from app.models import model_loader
 
 # Initialisation de FastAPI
 app = FastAPI()
 
-# Définir le schéma pour les données d'entrée
+# Définition plus souple des types avec Union
 class ClientData(BaseModel):
-    features: dict  # Dictionnaire {nom_feature: valeur}
+    features: Dict[str, Union[float, int]]  # Accepte float et int
 
 @app.get("/")
 def read_root():
@@ -17,35 +18,34 @@ def read_root():
 
 @app.post("/predict/")
 def predict(client_data: ClientData):
-    """
-    Endpoint pour effectuer une prédiction.
-    """
+    """ Endpoint pour effectuer une prédiction. """
     try:
         if model_loader.model is None:
             raise HTTPException(status_code=500, detail="Modèle non chargé.")
-        
-        # Récupérer les features du modèle (ordre correct)
+
+        # Récupérer les features du modèle
         feature_names = model_loader.model.feature_names_in_ if hasattr(model_loader.model, 'feature_names_in_') else [f'feature_{i}' for i in range(model_loader.model.n_features_in_)]
-        
-        # Construire un dictionnaire avec toutes les features attendues
+
         full_input = {f: 0 for f in feature_names}  # Valeurs par défaut
-        
-        # Mettre à jour avec les valeurs envoyées
+
+        # Vérifier et convertir les valeurs en float (si int)
         for f in client_data.features:
-            if f in full_input:  # Vérifier que la feature existe bien
-                full_input[f] = client_data.features[f]
-        
-        # Convertir en DataFrame
+            if f in full_input:
+                if isinstance(client_data.features[f], (int, float)):  # Vérifie que c'est un nombre
+                    full_input[f] = float(client_data.features[f])
+                else:
+                    raise ValueError(f"Valeur incorrecte pour {f}: {client_data.features[f]} (attendu: nombre)")
+
         input_df = pd.DataFrame([full_input])
-        
-        # Prédiction
         result = model_loader.predict(input_df)
-        
+
         return {
-            "threshold": model_loader.threshold if model_loader.threshold is not None else 0.55,  # Valeur par défaut si absent
+            "threshold": model_loader.threshold if model_loader.threshold is not None else 0.55,
             "probability": round(result["probabilities"][0], 4),
             "class": result["classes"][0]
         }
-    
+
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

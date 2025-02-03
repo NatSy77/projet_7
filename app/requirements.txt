@@ -6,3 +6,4 @@ scikit-learn
 streamlit
 matplotlib
 shap  # explications locales
+httpx
