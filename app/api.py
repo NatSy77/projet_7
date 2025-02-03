@@ -1,52 +1,51 @@
-# === Imports nécessaires ===
-import numpy as np
-import pandas as pd
-import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import pandas as pd
 import joblib
-
-# Définir le chemin des fichiers
-base_dir = os.path.dirname(os.path.abspath(__file__))  # Récupère le dossier où se trouve api.py
-model_path = os.path.join(base_dir, "../model_pipeline/model.pkl")
-csv_path = os.path.join(base_dir, "../global_feature_importance.csv")
-
-# Charger le modèle
-model = joblib.load(model_path)  # Directement le modèle
-
-# Charger les 20 features importantes
-important_features = pd.read_csv(csv_path)["Feature"].head(20).tolist()
-
-# Seuil de décision
-optimal_threshold = 0.55
+from app.models import model_loader  # Importer la classe ModelLoader
 
 # Initialisation de FastAPI
 app = FastAPI()
 
-# Modèle de données pour l'entrée API
+# Définir le schéma pour les données d'entrée
 class ClientData(BaseModel):
     features: dict  # Dictionnaire {nom_feature: valeur}
 
+@app.get("/")
+def read_root():
+    return {"message": "Bienvenue dans l'API de prédiction !"}
+
 @app.post("/predict/")
-async def predict(client_data: ClientData):
+def predict(client_data: ClientData):
+    """
+    Endpoint pour effectuer une prédiction.
+    """
     try:
-        # Vérifier que toutes les features nécessaires sont présentes
-        missing_features = [f for f in important_features if f not in client_data.features]
-        if missing_features:
-            raise HTTPException(status_code=400, detail=f"Features manquantes : {missing_features}")
-
-        # Filtrer uniquement les features importantes
-        filtered_features = np.array([client_data.features[f] for f in important_features]).reshape(1, -1)
-
+        if model_loader.model is None:
+            raise HTTPException(status_code=500, detail="Modèle non chargé.")
+        
+        # Récupérer les features du modèle (ordre correct)
+        feature_names = model_loader.model.feature_names_in_ if hasattr(model_loader.model, 'feature_names_in_') else [f'feature_{i}' for i in range(model_loader.model.n_features_in_)]
+        
+        # Construire un dictionnaire avec toutes les features attendues
+        full_input = {f: 0 for f in feature_names}  # Valeurs par défaut
+        
+        # Mettre à jour avec les valeurs envoyées
+        for f in client_data.features:
+            if f in full_input:  # Vérifier que la feature existe bien
+                full_input[f] = client_data.features[f]
+        
+        # Convertir en DataFrame
+        input_df = pd.DataFrame([full_input])
+        
         # Prédiction
-        y_prob = model.predict_proba(filtered_features)[0][1]
-        decision = "Refusé" if y_prob >= optimal_threshold else "Accepté"
-
+        result = model_loader.predict(input_df)
+        
         return {
-            "threshold": optimal_threshold,
-            "probability": round(y_prob, 4),
-            "class": decision
+            "threshold": model_loader.threshold if model_loader.threshold is not None else 0.55,  # Valeur par défaut si absent
+            "probability": round(result["probabilities"][0], 4),
+            "class": result["classes"][0]
         }
-
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

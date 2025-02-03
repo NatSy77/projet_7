@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 
 # URL de l'API (changer si nécessaire)
-API_URL = "http://127.0.0.1:8007/predict/"
+API_URL = "http://127.0.0.1:8000/predict/"
 
 # Titre de l'application
 st.title("Prédiction de Crédit")
@@ -12,7 +12,7 @@ st.title("Prédiction de Crédit")
 st.header("Entrer les caractéristiques du client")
 form = st.form(key="client_form")
 
-# Liste des features importantes
+# Liste des features importantes (12 affichées)
 features = [
     "EXT_SOURCE_1", "EXT_SOURCE_3", "AMT_CREDIT", "DAYS_BIRTH", "EXT_SOURCE_2",
     "AMT_ANNUITY", "DAYS_EMPLOYED", "AMT_GOODS_PRICE", "DAYS_ID_PUBLISH",
@@ -28,14 +28,20 @@ for feature in features:
 submit_button = form.form_submit_button(label="Obtenir la prédiction")
 
 if submit_button:
-    # Création du payload JSON
-    payload = {"features": list(client_data.values())}
-
+    # Construire un dictionnaire avec les valeurs par défaut pour toutes les features du modèle
+    default_input = {f: 0 for f in features}  # Par défaut, tout à 0
+    
+    # Mettre à jour uniquement les features affichées
+    for f in client_data:
+        default_input[f] = client_data[f]
+    
     try:
+        # Création du payload JSON
+        payload = {"features": default_input}
+        
         # Envoi de la requête à l'API
-        payload = {"features": client_data}  # le dictionnaire directement
         response = requests.post(API_URL, json=payload)
-
+        
         # Vérification du statut de la réponse
         if response.status_code == 200:
             result = response.json()
