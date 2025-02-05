@@ -14,9 +14,9 @@ form = st.form(key="client_form")
 
 # Liste des features importantes (12 affichées)
 features = [
-    "EXT_SOURCE_1", "EXT_SOURCE_3", "AMT_CREDIT", "DAYS_BIRTH", "EXT_SOURCE_2",
-    "AMT_ANNUITY", "DAYS_EMPLOYED", "AMT_GOODS_PRICE", "DAYS_ID_PUBLISH",
-    "DAYS_LAST_PHONE_CHANGE", "AMT_INCOME_TOTAL", "DAYS_REGISTRATION"
+    "EXT_SOURCE_1", "EXT_SOURCE_3", "AMT_CREDIT", "DAYS_BIRTH", "AMT_ANNUITY",
+    "EXT_SOURCE_2", "AMT_GOODS_PRICE", "DAYS_EMPLOYED", "DAYS_ID_PUBLISH",
+    "DAYS_LAST_PHONE_CHANGE", "DAYS_REGISTRATION", "AMT_INCOME_TOTAL"
 ]
 
 # Création des champs pour chaque feature
