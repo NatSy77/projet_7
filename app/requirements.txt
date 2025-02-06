@@ -5,5 +5,7 @@ mlflow
 scikit-learn
 streamlit
 matplotlib
-shap  # explications locales
+shap 
 httpx
+imbalanced-learn
+lightgbm
