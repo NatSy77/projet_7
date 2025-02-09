@@ -25,3 +25,4 @@ jobs:
             docker stop projet7-api || true
             docker rm projet7-api || true
             docker run -d -p 8000:8000 -p 8501:8501 --name projet7-api nathalie77/projet7-api:latest
+            
