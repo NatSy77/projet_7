@@ -24,5 +24,6 @@ jobs:
             docker pull nathalie77/projet7-api:latest
             docker stop projet7-api || true
             docker rm projet7-api || true
+            docker ps -q --filter "expose=8000" | xargs -r docker stop
+            docker ps -q --filter "expose=8000" | xargs -r docker rm
             docker run -d -p 8000:8000 -p 8501:8501 --name projet7-api nathalie77/projet7-api:latest
-            
