@@ -1,6 +1,3 @@
-# projet_7
- un modele de scoring
-
 # Projet 7 - Implementer et déployer un modele de scoring via une API
 
 ## 📌 Objectif du projet
