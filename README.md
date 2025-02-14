@@ -27,3 +27,7 @@ Ce projet vise à déployer un modèle de scoring de crédit sous forme d’API 
 ##  Tests unitaires
 Les tests pytestsont intégrés dans GitHub Actions : 
 pytest app/test_api.py
+
+## Liens
+**API** : http://13.36.172.156:8000/docs
+**APP Streamlit** : http://13.36.172.156:8501
