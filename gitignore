@@ -22,3 +22,4 @@ __pycache__/
 
 # Ignorer le fichier (taille)
 echo "streamlit_app/app_test.csv" >> .gitignore
+

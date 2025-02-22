@@ -140,3 +140,4 @@ fig = px.bar(
 
 st.subheader("📊 Comparaison Feature Importance")
 st.plotly_chart(fig)
+

@@ -25,3 +25,4 @@ uvicorn
 zstandard==0.23.0
 plotly
 pyarrow==14.0.1
+
