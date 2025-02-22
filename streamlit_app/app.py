@@ -1,58 +1,142 @@
+import zipfile
+import os
+import pandas as pd
 import streamlit as st
 import requests
-import pandas as pd
+import plotly.graph_objects as go
+import shap
+import numpy as np
+import joblib
+import plotly.express as px
 
-# URL de l'API (changer si nécessaire)
-API_URL = "http://127.0.0.1:8000/predict/"
+# 🟢 Décompression du fichier ZIP si le CSV n'existe pas
+zip_path = "streamlit_app/app_test.csv.zip"
+csv_path = "streamlit_app/app_test.csv"
 
-# Titre de l'application
-st.title("Prédiction de Crédit")
+if not os.path.exists(csv_path):
+    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+        zip_ref.extractall("streamlit_app")  # Extraction dans le même dossier
+    st.success("✅ Fichier app_test.csv décompressé avec succès !")
 
-# Section : Saisie des caractéristiques du client
-st.header("Entrer les caractéristiques du client")
-form = st.form(key="client_form")
+# 🟢 Charger la base client (CORRECTION : suppression de la redondance)
+@st.cache_data
+def load_data():
+    return pd.read_csv(csv_path)
 
-# Liste des features importantes (12 affichées)
-features = [
-    "EXT_SOURCE_1", "EXT_SOURCE_3", "AMT_CREDIT", "DAYS_BIRTH", "AMT_ANNUITY",
-    "EXT_SOURCE_2", "AMT_GOODS_PRICE", "DAYS_EMPLOYED", "DAYS_ID_PUBLISH",
-    "DAYS_LAST_PHONE_CHANGE", "DAYS_REGISTRATION", "AMT_INCOME_TOTAL"
-]
+df_clients = load_data()
 
-# Création des champs pour chaque feature
-client_data = {}
-for feature in features:
-    client_data[feature] = form.number_input(f"{feature}", value=0.0)
+# 🟢 Vérification des données clients
+st.write("### Vérification des clients chargés :")
+st.write(df_clients.head())
 
-# Bouton de soumission
-submit_button = form.form_submit_button(label="Obtenir la prédiction")
+# 🟢 URL de l'API
+API_URL = "http://13.36.172.156:8000/predict/"
 
-if submit_button:
-    # Construire un dictionnaire avec les valeurs par défaut pour toutes les features du modèle
-    default_input = {f: 0 for f in features}  # Par défaut, tout à 0
-    
-    # Mettre à jour uniquement les features affichées
-    for f in client_data:
-        default_input[f] = client_data[f]
-    
-    try:
-        # Création du payload JSON
-        payload = {"features": default_input}
+# 🟢 Titre de l'application
+st.title("Dashboard de Crédit Scoring")
+
+# 🟢 Sidebar : Sélection du client
+st.sidebar.header("Sélection du Client")
+client_id = st.sidebar.selectbox("Choisir un ID client", df_clients["SK_ID_CURR"])
+
+# 🟢 Récupération des données du client sélectionné
+client_data = df_clients[df_clients["SK_ID_CURR"] == client_id].drop(columns=["SK_ID_CURR"]).to_dict(orient="records")[0]
+
+# 🟢 Affichage des données du client
+st.header("Données du client sélectionné")
+st.write(pd.DataFrame(client_data, index=["Valeur"]))
+
+# 🟢 Bouton de prédiction
+if st.button("Obtenir la prédiction"):
+
+    # Requête API
+    response = requests.post(API_URL, json={"features": client_data})
+
+    if response.status_code == 200:
+        result = response.json()
         
-        # Envoi de la requête à l'API
-        response = requests.post(API_URL, json=payload)
-        
-        # Vérification du statut de la réponse
-        if response.status_code == 200:
-            result = response.json()
-            st.subheader("Résultats de la prédiction")
-            st.write(f"**Seuil utilisé** : {result['threshold']}")
-            st.write(f"**Probabilité de défaut** : {result['probability']}")
-            st.write(f"**Classe prédite** : {result['class']}")
-        else:
-            st.error(f"Erreur lors de la requête à l'API : {response.status_code}")
-            st.text(f"Message de l'API : {response.text}")  # Afficher le message d'erreur détaillé
+        # Affichage des résultats
+        st.subheader("Résultat de la Prédiction")
+        st.write(f"**Seuil utilisé** : {result['threshold']}")
+        st.write(f"**Probabilité de défaut** : {result['probability']}")
+        st.write(f"**Classe prédite** : {result['class']}")
 
-    except Exception as e:
-        st.error("Erreur lors de la connexion à l'API.")
-        st.text(f"Détail de l'erreur : {e}")
+        # 🟢 Ajouter une jauge pour visualiser le score
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=result["probability"] * 100,  # Convertir en pourcentage
+            title={"text": "Probabilité de Défaut (%)"},
+            gauge={
+                "axis": {"range": [0, 100]},
+                "steps": [
+                    {"range": [0, result["threshold"] * 100], "color": "green"},
+                    {"range": [result["threshold"] * 100, 100], "color": "red"}
+                ],
+                "threshold": {
+                    "line": {"color": "black", "width": 4},
+                    "thickness": 0.75,
+                    "value": result["threshold"] * 100
+                }
+            }
+        ))
+
+        st.plotly_chart(fig)  # Affichage de la jauge
+
+    else:
+        st.error(f"Erreur API : {response.status_code} - {response.text}")
+
+# 🟢 Charger et afficher la feature importance globale
+@st.cache_data
+def load_global_feature_importance():
+    file_path = os.path.join(os.path.dirname(__file__), "../global_feature_importance.csv")  
+    return pd.read_csv(file_path)
+
+global_feature_importance = load_global_feature_importance()
+
+# Affichage test
+st.sidebar.subheader("🔎 Feature Importance Globale")
+st.write(global_feature_importance.head())
+
+# 🟢 Charger le modèle
+@st.cache_data
+def load_model():
+    model_path = "model_pipeline/LightGBM_pipeline.pkl"
+    model = joblib.load(model_path)  # Charger le modèle LightGBM
+    return model
+
+model = load_model()
+st.write(f"Type du modèle après extraction : {type(model)}")  # Vérification
+
+# 🟢 Calcul de la Feature Importance Locale avec SHAP
+@st.cache_data
+def compute_local_feature_importance(client_data):
+    df_client = pd.DataFrame([client_data])  # Convertir en DataFrame
+
+    explainer = shap.TreeExplainer(model)  # Utiliser le modèle extrait
+    shap_values = explainer(df_client)  # Nouvelle méthode pour éviter l'erreur
+
+    feature_importance_local = pd.DataFrame({
+        "Feature": df_client.columns,
+        "SHAP Value": shap_values.values[0]  # Récupérer les valeurs SHAP correctement
+    }).sort_values(by="SHAP Value", ascending=False)
+
+    return feature_importance_local
+
+# Calcul et affichage de la Feature Importance Locale
+feature_importance_local = compute_local_feature_importance(client_data)
+st.subheader("🔍 Feature Importance Locale")
+st.write(feature_importance_local.head())
+
+# 🟢 Affichage du graphique SHAP (Feature Importance Locale vs Globale)
+merged_importance = global_feature_importance.merge(
+    feature_importance_local, on="Feature", suffixes=("_globale", "_locale")
+)
+
+fig = px.bar(
+    merged_importance.melt(id_vars="Feature", var_name="Type", value_name="Valeur"),
+    x="Valeur", y="Feature", color="Type", orientation="h",
+    title="Comparaison Feature Importance : Locale vs Globale"
+)
+
+st.subheader("📊 Comparaison Feature Importance")
+st.plotly_chart(fig)

@@ -19,3 +19,6 @@ __pycache__/
 # Ignorer les dépendances installées
 app/requirements.txt__pycache__/
 __pycache__/
+
+# Ignorer le fichier (taille)
+echo "streamlit_app/app_test.csv" >> .gitignore
