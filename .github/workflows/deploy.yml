@@ -3,7 +3,7 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main  # Déclenche l'action lors d'un push sur main
+      - main  # Déclenche l'action lors d'un push sur la branche main
 
 jobs:
   test:
@@ -30,7 +30,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: test  # ⬅️ Ajouté : attend que les tests soient validés avant de déployer
+    needs: test  # Assure que les tests sont validés avant de déployer
 
     steps:
       - name: Checkout repository
@@ -43,10 +43,51 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
+            echo "🚀 Début du déploiement sur AWS EC2"
+
+            # 🟢 Vérifier et installer Docker si nécessaire
+            echo "🔍 Vérification de Docker..."
+            if ! command -v docker &> /dev/null
+            then
+              echo "⚠️ Docker non trouvé, installation en cours..."
+              sudo apt update
+              sudo apt install -y docker.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+            else
+              echo "✅ Docker est déjà installé"
+            fi
+
+            # 🔐 Connexion à Docker Hub et mise à jour de l'image
+            echo "🔐 Connexion à Docker Hub..."
             docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+
+            echo "🗑️ Suppression de l'ancienne image Docker..."
+            docker rmi nathalie77/projet7-api:latest || true
+
+            echo "📥 Téléchargement de la dernière image..."
             docker pull nathalie77/projet7-api:latest
+
+            # 🚀 Supprimer les anciens conteneurs proprement
+            echo "🗑️ Suppression des anciens conteneurs..."
             docker stop projet7-api || true
             docker rm projet7-api || true
             docker ps -q --filter "publish=8000" | xargs -r docker stop
             docker ps -q --filter "publish=8000" | xargs -r docker rm
+
+            # 🚀 Lancer le conteneur avec FastAPI et Streamlit
+            echo "🚀 Lancement du nouveau conteneur..."
             docker run -d -p 8000:8000 -p 8501:8501 --name projet7-api nathalie77/projet7-api:latest
+
+            # 🔍 Vérification de l'API après le déploiement
+            echo "⏳ Attente de 5 secondes pour le démarrage..."
+            sleep 5
+            echo "🔍 Vérification que l'API est bien en ligne..."
+            if curl -f http://localhost:8000/; then
+              echo "✅ L'API est accessible !"
+            else
+              echo "❌ L'API ne répond pas ! Déploiement échoué."
+              exit 1
+            fi
+
+            echo "🎉 Déploiement terminé avec succès !"
