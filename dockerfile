@@ -13,13 +13,17 @@ COPY requirements.txt ./requirements.txt
 # Copier les autres fichiers nécessaires
 COPY model_pipeline model_pipeline/
 COPY app app/
+COPY global_feature_importance.csv /app/
 COPY streamlit_app streamlit_app/
 
-# Installer les dépendances
-RUN pip install --no-cache-dir -r requirements.txt
+# Installer les dépendances et forcer la mise à jour
+RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
+
+# Nettoyer les fichiers inutiles pour réduire la taille de l'image
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Exposer les ports pour FastAPI et Streamlit
 EXPOSE 8000 8501
 
-# Lancer FastAPI et Streamlit en parallèle
-CMD ["sh", "-c", "uvicorn app.api:app --host 0.0.0.0 --port 8000 & streamlit run streamlit_app/app.py --server.port 8501 --server.address 0.0.0.0"]
+# Lancer FastAPI et Streamlit en parallèle avec un ENTRYPOINT
+ENTRYPOINT ["bash", "-c", "uvicorn app.api:app --host 0.0.0.0 --port 8000 & streamlit run streamlit_app/app.py --server.port 8501 --server.address 0.0.0.0"]
