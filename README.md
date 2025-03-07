@@ -12,8 +12,27 @@ Ce projet vise à déployer un modèle de scoring de crédit sous forme d’API 
 - `requirements.txt` : Liste des dépendances
 
 ## 🚀 Déploiement & CI/CD
-- **CI/CD :** GitHub Actions automatise les tests (`pytest`) et le déploiement sur AWS.
-- **Déploiement :** L'API est hébergée sur AWS EC2, avec une image Docker stockée sur Docker Hub.
+🔹 CI/CD : GitHub Actions automatise les tests ( pytest) et le déploiement sur AWS EC2 .
+🔹 Docker : L'application est conteneurisée et stockée sur Docker Hub .
+🔹 Déploiement : L'API et le tableau de bord Streamlit sont hébergés sur AWS EC2 .
+
+## 📊 Fonctionnalités du Dashboard interactif
+🔍 Visualisation du scoring client
+✅ Affichage du score et de sa probabilité (est-il loin du seuil ?)
+✅ Interprétation claire du score pour une personne non experte en data science
+
+📌 Analyse des informations clients
+✅ Affichage des principales informations descriptives d'un client
+✅ Comparaison du client à l'ensemble des clients ou à un groupe similaire via un filtre
+
+🎨 Accessibilité et ergonomie
+✅ Conformité aux critères WCAG pour améliorer l'accessibilité (couleurs, contraste, redimensionnement)
+
+☁️ Hébergement et accessibilité
+✅ Déploiement sur AWS EC2 pour permettre un accès multi-utilisateurs
+
+🛠️ Fonctionnalités avancées (optionnelles)
+🔹 Ajout de LIME pour expliquer instantanément les décisions du modèle
 
 ## 🔧 Installation et utilisation
 1. **Installer les dépendances** :

@@ -8,6 +8,8 @@ import shap
 import numpy as np
 import joblib
 import plotly.express as px
+import lime
+import lime.lime_tabular
 
 
 # ==========================  CONFIGURATION DE LA PAGE (Accessibilité) ========================== #
@@ -19,8 +21,8 @@ st.set_page_config(
 
 # ==========================  DÉCOMPRESSION DES DONNÉES ========================== #
 
-zip_path = "streamlit_app/app_test.csv.zip"
-csv_path = "streamlit_app/app_test.csv"
+zip_path = "streamlit_app/app_test.csv.zip.icloud"
+csv_path = "streamlit_app/app_test.csv.icloud"
 
 if not os.path.exists(csv_path):
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
@@ -135,6 +137,39 @@ def load_model():
 # Charger le modèle globalement
 model = load_model()
 st.write(f"✅ Modèle chargé : {type(model)}")
+
+# ==========================  IMPORTANCE LOCALE (LIME) ========================== #
+
+@st.cache_data
+def compute_lime_explanation(client_data, model, df_clients):
+    """ Génère une explication LIME pour un client donné. """
+    
+    # Transformer le dictionnaire client en tableau numpy (valeurs uniquement)
+    client_values = np.array(list(client_data.values())).reshape(1, -1)
+    
+    # Créer un explainer LIME avec les données clients
+    explainer = lime.lime_tabular.LimeTabularExplainer(
+        training_data=df_clients.drop(columns=["SK_ID_CURR"]).values,  
+        feature_names=df_clients.drop(columns=["SK_ID_CURR"]).columns,
+        class_names=["Refusé", "Accepté"],
+        mode="classification"
+    )
+
+    # Générer l’explication pour le client
+    exp = explainer.explain_instance(client_values[0], model.predict_proba, num_features=10)
+
+    return exp
+
+# 🔹 Affichage du graphique LIME
+st.subheader("🔍 Explication avec LIME")
+
+if st.button("Générer une explication LIME"):
+    lime_exp = compute_lime_explanation(client_data, model, df_clients)
+    
+    # Affichage du graphique LIME dans Streamlit
+    fig = lime_exp.as_pyplot_figure()
+    st.pyplot(fig)
+
 
 # ==========================  IMPORTANCE LOCALE (SHAP) ========================== #
 
