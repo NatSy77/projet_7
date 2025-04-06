@@ -18,18 +18,20 @@ Ce projet vise à déployer un modèle de scoring de crédit sous forme d’API 
 
 ## 📊 Fonctionnalités du Dashboard interactif
 🔍 Visualisation du scoring client
-✅ Affichage du score et de sa probabilité (est-il loin du seuil ?)
-✅ Interprétation claire du score pour une personne non experte en data science
+
+- Affichage du score et de sa probabilité (est-il loin du seuil ?)
+
+- Interprétation claire du score pour une personne non experte en data science
 
 📌 Analyse des informations clients
-✅ Affichage des principales informations descriptives d'un client
-✅ Comparaison du client à l'ensemble des clients ou à un groupe similaire via un filtre
 
-🎨 Accessibilité et ergonomie
-✅ Conformité aux critères WCAG pour améliorer l'accessibilité (couleurs, contraste, redimensionnement)
+- Affichage des principales informations descriptives d'un client
 
-☁️ Hébergement et accessibilité
-✅ Déploiement sur AWS EC2 pour permettre un accès multi-utilisateurs
+- Comparaison du client à l'ensemble des clients ou à un groupe similaire via un filtre
+
+🎨 Accessibilité et ergonomie : Conformité aux critères WCAG pour améliorer l'accessibilité (couleurs, contraste, redimensionnement)
+
+☁️ Hébergement et accessibilité : Déploiement sur AWS EC2 pour permettre un accès multi-utilisateurs
 
 🛠️ Fonctionnalités avancées (optionnelles)
 🔹 Ajout de LIME pour expliquer instantanément les décisions du modèle
@@ -48,5 +50,6 @@ Les tests pytestsont intégrés dans GitHub Actions :
 pytest app/test_api.py
 
 ## Liens
-**API** : http://13.36.172.156:8000/docs
-**APP Streamlit** : http://13.36.172.156:8501
+**API** : http://13.38.80.175:8000/docs
+
+**APP Streamlit** : http://13.38.80.175:8501
