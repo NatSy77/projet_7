@@ -238,4 +238,3 @@ elif percentile < 75:
     st.success(f"✅ Le client est **au-dessus de la moyenne** ({percentile}e percentile).")
 else:
     st.success(f"🌟 Le client est dans les **{100 - percentile}% meilleurs** sur cette variable.")
-

@@ -12,6 +12,8 @@ __pycache__/
 # Ignorer les données sensibles
 *.env
 
+*.icloud
+
 # Ignorer les fichiers générés par Jupyter
 .notebooks_checkpoints/
 .ipynb_checkpoints/
