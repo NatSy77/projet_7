@@ -20,8 +20,11 @@ scikit-learn==1.6.1
 scipy==1.13.1
 shap 
 streamlit
+plotly>=5.13.0
+python-dateutil>=2.8.2
+tzdata>=2022.1
 uvicorn
 zstandard==0.23.0
-plotly
 pyarrow==14.0.1
 lime==0.2.0.1
+watchdog
