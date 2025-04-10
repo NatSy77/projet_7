@@ -13,8 +13,6 @@ import lime
 import lime.lime_tabular
 import matplotlib.pyplot as plt
 
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
 
 # ========================== CONFIG PAGE ========================== #
 st.set_page_config(page_title="Dashboard de Crédit Scoring", page_icon="📊", layout="wide")
@@ -33,13 +31,19 @@ for key, default in {
         st.session_state[key] = default
 
 # ========================== DATA LOADING ========================== #
-zip_path = "streamlit_app/app_test.csv.zip"
-csv_path = "streamlit_app/app_test.csv"
+# Détermine le chemin absolu du dossier courant (même dans Docker)
+base_dir = os.path.dirname(os.path.abspath(__file__))
+zip_path = os.path.join(base_dir, "app_test.csv.zip")
+csv_path = os.path.join(base_dir, "app_test.csv")
 
+# Décompression conditionnelle
 if not os.path.exists(csv_path):
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall("streamlit_app")
-    st.success("✅ Fichier app_test.csv décompressé avec succès !")
+    if os.path.exists(zip_path) and zipfile.is_zipfile(zip_path):
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(base_dir)
+        st.success("Fichier app_test.csv décompressé avec succès !")
+    else:
+        st.error("Le fichier ZIP est manquant ou invalide.")
 
 @st.cache_data
 def load_data():
@@ -208,7 +212,6 @@ if st.button("Comparer cette variable"):
 if st.session_state["compare_clicked"] and st.session_state["selected_feature"] in df_clients.columns:
     feature = st.session_state["selected_feature"]
     
-    # Légende accessible
     st.markdown("""
     #### ℹ️ Légende du graphique :
     - **Axe horizontal** : valeurs possibles de la variable sélectionnée  
@@ -216,25 +219,10 @@ if st.session_state["compare_clicked"] and st.session_state["selected_feature"] 
     - **Barres bleues** : distribution dans l’ensemble des clients  
     - **Ligne noire pointillée** : valeur du client sélectionné
     """)
-    
+
     fig = px.histogram(df_clients, x=feature, nbins=50,
                        title=f"Distribution de {feature} dans l'ensemble des clients",
                        labels={feature: feature})
     fig.add_vline(x=client_data[feature], line_dash="dash", line_color="black")
     fig.update_layout(font=dict(size=14))
     st.plotly_chart(fig)
-    
-# Analyse automatique : position du client dans la distribution
-client_value = client_data[feature]
-feature_series = df_clients[feature].dropna()
-
-percentile = np.round((feature_series < client_value).mean() * 100, 2)
-
-if percentile < 25:
-    st.warning(f"⚠️ Le client est dans les **{percentile}% les plus faibles** sur cette variable.")
-elif percentile < 50:
-    st.info(f"ℹ️ Le client est **en dessous de la moyenne** ({percentile}e percentile).")
-elif percentile < 75:
-    st.success(f"✅ Le client est **au-dessus de la moyenne** ({percentile}e percentile).")
-else:
-    st.success(f"🌟 Le client est dans les **{100 - percentile}% meilleurs** sur cette variable.")
