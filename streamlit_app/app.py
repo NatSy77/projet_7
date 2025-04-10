@@ -33,7 +33,7 @@ for key, default in {
 # ========================== DATA LOADING ========================== #
 # Détermine le chemin absolu du dossier courant (même dans Docker)
 base_dir = os.path.dirname(os.path.abspath(__file__))
-zip_path = os.path.join(base_dir, "app_test.csv.zip")
+zip_path = os.path.join(base_dir, "donnees_clients.zip")
 csv_path = os.path.join(base_dir, "app_test.csv")
 
 # Décompression conditionnelle
