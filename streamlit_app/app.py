@@ -226,3 +226,4 @@ if st.session_state["compare_clicked"] and st.session_state["selected_feature"] 
     fig.add_vline(x=client_data[feature], line_dash="dash", line_color="black")
     fig.update_layout(font=dict(size=14))
     st.plotly_chart(fig)
+
