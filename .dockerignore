@@ -1,25 +1,37 @@
-# Ignorer les fichiers et dossiers Python générés
+# === FICHIERS À NE PAS COPIER DANS DOCKER ===
+
+# Fichiers iCloud fantômes
+*.icloud
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Ignorer les environnements virtuels
+# Environnements virtuels
 venv/
 env/
 *.venv
 .env
 
-# Ignorer les fichiers système inutiles
-.DS_Store
-Thumbs.db
-
-# Ignorer les fichiers liés à Git et les logs
+# Git
 .git
 .gitignore
+
+# Logs
 *.log
 
-# Ignorer les archives et fichiers temporaires
+# Archives (mais on garde les .zip dont on a besoin)
 *.tar
-*.zip
 *.gz
+
+# Dossiers spécifiques inutiles
+__MACOSX/
+.vscode/
+mlruns/
+*.ipynb_checkpoints/
