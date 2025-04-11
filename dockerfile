@@ -11,10 +11,16 @@ RUN apt-get update && apt-get install -y cmake gcc g++ libgl1-mesa-glx
 COPY requirements.txt ./requirements.txt
 
 # Copier les autres fichiers nécessaires
-COPY model_pipeline model_pipeline/
+# COPY model_pipeline model_pipeline/
+# COPY global_feature_importance.csv /app/
+# COPY streamlit_app streamlit_app/
 COPY app app/
-COPY global_feature_importance.csv /app/
-COPY streamlit_app streamlit_app/
+COPY streamlit_app/app.py ./streamlit_app/
+COPY streamlit_app/donnees_clients.zip ./streamlit_app/
+COPY global_feature_importance.csv ./
+COPY model_pipeline/ ./model_pipeline/
+
+
 
 # Installer les dépendances et forcer la mise à jour
 RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
