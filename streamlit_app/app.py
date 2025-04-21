@@ -5,7 +5,6 @@ import pandas as pd
 import streamlit as st
 import requests
 import plotly.graph_objects as go
-import shap
 import numpy as np
 import joblib
 import plotly.express as px
@@ -67,7 +66,9 @@ def load_model():
 model = load_model()
 
 # ========================== UI ========================== #
-API_URL = "http://13.38.80.175:8000/predict/"
+# API_URL = "http://13.38.80.175:8000/predict/"
+
+API_URL = "http://localhost:8000/predict/"
 st.title("Dashboard de Crédit Scoring")
 
 st.markdown("""
@@ -154,49 +155,6 @@ if st.button("Générer une explication LIME"):
 if st.session_state["lime_clicked"] and st.session_state["lime_exp"] is not None:
     fig = st.session_state["lime_exp"].as_pyplot_figure()
     st.pyplot(fig)
-
-# ========================== SHAP ========================== #
-@st.cache_data
-def compute_local_feature_importance(client_data):
-    df_client = pd.DataFrame([client_data])
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer(df_client)
-    return pd.DataFrame({
-        "Feature": df_client.columns,
-        "SHAP Value": shap_values.values[0]
-    }).sort_values(by="SHAP Value", ascending=False)
-
-feature_importance_local = compute_local_feature_importance(client_data)
-
-# ========================== GRAPH: IMPORTANCE VARIABLES ========================== #
-global_col = "Importance"
-shap_col = "SHAP Value"
-
-merged_importance = global_feature_importance.merge(
-    feature_importance_local, on="Feature", how="outer"
-).fillna(0)
-merged_importance[global_col] = np.log1p(merged_importance[global_col])
-merged_importance[shap_col] = np.sign(merged_importance[shap_col]) * np.log1p(abs(merged_importance[shap_col]))
-merged_importance["Total Impact"] = merged_importance[global_col].abs() + merged_importance[shap_col].abs()
-merged_importance = merged_importance.sort_values(by="Total Impact", ascending=False).head(10)
-
-st.subheader("📊 Explication de la décision du modèle")
-
-color_map = {
-    "Importance": "blue",
-    "SHAP Value": "red",
-    "Total Impact": "green"
-}
-
-fig = px.bar(
-    merged_importance.melt(id_vars="Feature", var_name="Type", value_name="Valeur"),
-    x="Valeur", y="Feature", color="Type", orientation="h",
-    title="📊 Importance Globale vs Locale",
-    color_discrete_map=color_map,
-    labels={"Feature": "Variable", "Valeur": "Importance (log)"}
-)
-fig.update_layout(font=dict(size=14))
-st.plotly_chart(fig)
 
 # ========================== COMPARAISON PAR VARIABLE ========================== #
 st.subheader("📊 Comparaison à l'ensemble des clients")
