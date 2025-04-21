@@ -76,18 +76,16 @@ jobs:
             docker ps -q --filter "publish=8000" | xargs -r docker rm
 
             # 🚀 Lancer le conteneur avec FastAPI et Streamlit
-            echo "🚀 Lancement du nouveau conteneur..."
-            docker run -d -p 8000:8000 -p 8501:8501 --name projet7-api nathalie77/projet7-api:latest
-
-            # 🔍 Vérification de l'API après le déploiement
-            echo "⏳ Attente de 5 secondes pour le démarrage..."
-            sleep 5
-            echo "🔍 Vérification que l'API est bien en ligne..."
-            if curl -f http://localhost:8000/; then
-              echo "✅ L'API est accessible !"
-            else
-              echo "❌ L'API ne répond pas ! Déploiement échoué."
-              exit 1
-            fi
-
-            echo "🎉 Déploiement terminé avec succès !"
+            echo "⏳ Attente du démarrage de l'API (max 30s)..."
+            for i in {1..6}; do
+              sleep 5
+              if curl -s http://localhost:8000/ > /dev/null; then
+                echo "✅ L'API est accessible !"
+                break
+              fi
+              echo "⏳ Tentative $i/6 : l'API ne répond pas encore..."
+              if [ $i -eq 6 ]; then
+                echo "❌ L'API ne répond toujours pas après 30 secondes. Échec."
+                exit 1
+              fi
+            done
