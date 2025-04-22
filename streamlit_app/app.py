@@ -66,7 +66,7 @@ def load_model():
 model = load_model()
 
 # ========================== UI ========================== #
-API_URL = "http://13.38.80.175:8000/predict/"
+API_URL = "http://13.36.179.77:8000/predict/"
 # API_URL = "http://localhost:8000/predict/"
 
 st.title("Dashboard de Crédit Scoring")

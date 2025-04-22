@@ -50,6 +50,6 @@ Les tests pytestsont intégrés dans GitHub Actions :
 pytest app/test_api.py
 
 ## Liens
-**API** : http://13.38.80.175:8000/docs
+**API** : http://13.36.179.77:8000/docs
 
-**APP Streamlit** : http://13.38.80.175:8501
+**APP Streamlit** : http://13.36.179.77:8501
